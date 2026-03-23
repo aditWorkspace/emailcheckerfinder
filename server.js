@@ -12,6 +12,12 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Ensure DB tables exist on first request (needed for Vercel serverless)
+app.use('/api', async (_req, _res, next) => {
+  try { await db.migrate(); } catch (e) { console.error('Migration error:', e.message); }
+  next();
+});
+
 const API_KEY = process.env.BULK_EMAIL_KEY || 't8ZPpGnFeVrm7owcM9b4YELgQRN2d5aA';
 const API_URL = 'https://api.bulkemailchecker.com/real-time/';
 
@@ -141,8 +147,13 @@ app.patch('/api/runs/:runId/sender', async (req, res) => {
 
 // Get full history
 app.get('/api/history', async (_req, res) => {
-  const history = await db.getHistory();
-  res.json(history);
+  try {
+    const history = await db.getHistory();
+    res.json(history);
+  } catch (err) {
+    console.error('History error:', err.message);
+    res.json([]);
+  }
 });
 
 async function start() {

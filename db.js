@@ -11,14 +11,14 @@ function getDb() {
   return sql;
 }
 
+let migrated = false;
+
 async function migrate() {
+  if (migrated) return;
   const sql = getDb();
 
-  // Drop old schema if it exists
-  await sql`DROP TABLE IF EXISTS email_results CASCADE`;
+  // Drop legacy table only (not current schema)
   await sql`DROP TABLE IF EXISTS names CASCADE`;
-  await sql`DROP TABLE IF EXISTS submitted_names CASCADE`;
-  await sql`DROP TABLE IF EXISTS finder_runs CASCADE`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS finder_runs (
@@ -59,6 +59,7 @@ async function migrate() {
   // Index for fast global dedupe lookups
   await sql`CREATE INDEX IF NOT EXISTS idx_submitted_names_normalized ON submitted_names(normalized_name)`;
 
+  migrated = true;
   console.log('DB migration complete');
 }
 
