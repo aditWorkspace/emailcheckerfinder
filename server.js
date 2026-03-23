@@ -5,7 +5,12 @@ const db = require('./db');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Explicit root route for Vercel
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const API_KEY = process.env.BULK_EMAIL_KEY || 't8ZPpGnFeVrm7owcM9b4YELgQRN2d5aA';
 const API_URL = 'https://api.bulkemailchecker.com/real-time/';
